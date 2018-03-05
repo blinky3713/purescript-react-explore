@@ -75,63 +75,63 @@ data AddF a = AddF Int a
 
 derive instance functorAddF :: Functor AddF
 
-data TotalF a = TotalF (Int -> a)
+data ClearF a = ClearF a
 
-derive instance functorTotalF :: Functor TotalF
+derive instance functorClearF :: Functor ClearF
 
-type CalcF = Coproduct AddF TotalF
+type CalcF = Coproduct AddF ClearF
 
 type Calc = Free CalcF
 
 add :: Int -> Calc Unit
 add n = liftF <<< left $ AddF n unit
 
-total :: Calc Int
-total = liftF <<< right $ TotalF id
+clear :: Calc Unit
+clear = liftF <<< right $ ClearF unit
 
 -- | Cofree Comonad Interpreter Definitions
 data CoAddF a = CoAddF (Int -> a)
 
 derive instance functorCoAddF :: Functor CoAddF
 
-data CoTotalF a = CoTotalF (Tuple Int a)
+data CoClearF a = CoClearF a
 
-derive instance functorCoTotalF :: Functor CoTotalF
+derive instance functorCoClearF :: Functor CoClearF
 
-type CoCalcF = Product CoAddF CoTotalF
+type CoCalcF = Product CoAddF CoClearF
 
 type CoCalc = Cofree CoCalcF
 
 coAdd :: Int -> CoAddF Int
 coAdd currentCount = CoAddF $ \n -> n + currentCount
 
-coTotal :: Int -> CoTotalF Int
-coTotal currentCount = CoTotalF (Tuple currentCount currentCount)
+coClear :: Int -> CoClearF Int
+coClear = const $ CoClearF 0
 
 -- pairings
 
 addP :: CoAddF ⋈ AddF
 addP f (CoAddF g) (AddF n b) = f (g n) b
 
-totalP :: CoTotalF ⋈ TotalF
-totalP f (CoTotalF (Tuple n a)) (TotalF g) = f a (g n)
+clearP :: CoClearF ⋈ ClearF
+clearP f (CoClearF a) (ClearF b) = f a b
 
 calcP :: CalcF ⋈ CoCalcF
 calcP = sym calcP'
   where
     calcP' :: CoCalcF ⋈ CalcF
-    calcP' = productCoproduct addP totalP
+    calcP' = productCoproduct addP clearP
 
 --------------------------------------------------------------------------------
 
 calcInterpreter :: CoCalc Unit
 calcInterpreter =
   let start = 0
-      next wa = Tuple unit (coAdd wa `product` coTotal wa)
+      next wa = Tuple unit (coAdd wa `product` coClear wa)
   in buildCofree next start
 
 calcExample :: Component CoCalc
-calcExample = buildCofree (\count -> Tuple (render count) (coAdd count `product` coTotal count)) 0 where
+calcExample = buildCofree (\count -> Tuple (render count) (coAdd count `product` coClear count)) 0 where
   embed :: Calc ~> Co CoCalc
   embed = embedEffects' calcP
   render :: Int -> UI (Co (CoCalc) Unit)
@@ -141,5 +141,10 @@ calcExample = buildCofree (\count -> Tuple (render count) (coAdd count `product`
                          send (embed $ add 1)
                       ]
                       [ D.text "Increment"
+                      ]
+           , D.button [ P.onClick \_ ->
+                         send (embed $ clear)
+                      ]
+                      [ D.text "Clear"
                       ]
            ]

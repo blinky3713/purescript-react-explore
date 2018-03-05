@@ -29,6 +29,8 @@ import Data.Tuple (Tuple(..))
 import Partial.Unsafe (unsafePartial)
 import ReactDOM (render)
 
+import Test.DSL (calcExample)
+
 -- | A counter component implemented using the `Store` comonad.
 storeExample :: Component (StoreT Int Identity)
 storeExample = store render 0 where
@@ -132,7 +134,7 @@ main = void (elm' >>= render ui) where
              ]
 
   ui :: ReactElement
-  ui = D.div' [ createFactory (explore together) {} ]
+  ui = D.div' [ createFactory (explore calcExample) {} ]
 
   elm' :: Eff (dom :: DOM | eff) Element
   elm' = do
