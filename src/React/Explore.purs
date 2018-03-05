@@ -52,6 +52,10 @@ type UI a = Handler a -> R.ReactElement
 -- | actions in the `Co w` monad in order to explore the state space.
 type Component w = w (UI (Co w Unit))
 
+-- w (Hander (Co w Unit) -> R.ReactElement)
+-- w ((Co w Unit -> IO Unit) -> R.ReactElement)
+
+
 -- | Explore a space of states specified by some comonad, and defined by a
 -- | value in that comonad.
 -- |
