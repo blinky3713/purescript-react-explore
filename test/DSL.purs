@@ -23,7 +23,7 @@ import React.Explore (Component, UI)
 
 Let 'C' be the functor category. For a given functor 'g', define the functor 'F: C^op -> Set' by
 
-    f |--> f ⊗ g ~> Identity
+    f |--> {phi | phi :: f ⊗ g ~> Identity}
     α :: f ~> f' |--> . hoistDay1 α :: (f' ⊗ g ~> Identity) ~> (f ⊗ g ~> Identity).
 
 Because ⊗ has a right adjoint, denoted by ⊸ , it follows that F is representable, namely
